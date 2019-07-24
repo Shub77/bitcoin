@@ -809,6 +809,15 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
             } else if ((pos = str.find('=')) != std::string::npos) {
                 std::string name = prefix + TrimString(str.substr(0, pos), pattern);
                 std::string value = TrimString(str.substr(pos + 1), pattern);
+#ifdef WIN32
+                if ((name.find("blocknotify") != std::string::npos) || (name.find("walletnotify") != std::string::npos) || (name.find("alertnotify") != std::string::npos)) {
+                    std::size_t first_quote;
+                    if ( ! ( ((first_quote = value.find("\"")) != std::string::npos) && (value.find("\"", first_quote + 1, 1) != std::string::npos) ) ) {
+                        error = strprintf("parse error on line %i, not enclosing command in double quotes in %s can be dangerous and must be avoided", linenr, name);
+                        return false;
+					}
+                }
+#endif
                 if (used_hash && name.find("rpcpassword") != std::string::npos) {
                     error = strprintf("parse error on line %i, using # in rpcpassword can be ambiguous and should be avoided", linenr);
                     return false;
@@ -1121,7 +1130,10 @@ void runCommand(const std::string& strCommand)
 #ifndef WIN32
     int nErr = ::system(strCommand.c_str());
 #else
-    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
+    UINT nErr = WinExec(strCommand.c_str(), SW_SHOWDEFAULT);
+    if (nErr > 31) {
+        nErr = 0;
+    }
 #endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
