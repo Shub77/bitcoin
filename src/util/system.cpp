@@ -815,7 +815,7 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
                     if ( ! ( ((first_quote = value.find("\"")) != std::string::npos) && (value.find("\"", first_quote + 1, 1) != std::string::npos) ) ) {
                         error = strprintf("parse error on line %i, not enclosing command in double quotes in %s can be dangerous and must be avoided", linenr, name);
                         return false;
-					}
+                    }
                 }
 #endif
                 if (used_hash && name.find("rpcpassword") != std::string::npos) {
